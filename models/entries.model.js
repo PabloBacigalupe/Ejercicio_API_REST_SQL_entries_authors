@@ -1,40 +1,84 @@
-const pool = require('../config/db_pgsql');
-const db_queries_entries = require('../queries/entry.queries');
+const pool = require('../config/db_pgsql'); // conexión a PostgreSQL
+const queries = require('../queries/entries.queries'); // consultas SQL
 
 const getAllEntries = async () => {
   let client, result;
   try {
-      client = await pool.connect(); // Espera a abrir conexion
-      const data = await client.query(queries.getAllEntries)
-      result = data.rows
-  } catch (error) {
-    console.log(error);
-    throw error;
+    client = await pool.connect();
+    const data = await client.query(queries.getAllEntries);
+    result = data.rows;
+  } catch (err) {
+    console.log(err);
+    throw err;
   } finally {
     client.release();
   }
-  return result
+  return result;
 };
 
-
-const updateEntryByTitle = async (newEntry, oldTitle) => {
-  const { title, content, date, category, email_author } = newEntry;
-  await pool.query(db_queries_entries.updateEntryByTitle, [
-    title,
-    content,
-    date,
-    category,
-    email_author,
-    oldTitle
-  ]);
+const insertEntry = async (entry) => {
+  let client, result;
+  try {
+    client = await pool.connect();
+    const data = await client.query(queries.insertEntry, [
+      entry.title,
+      entry.content,
+      entry.date,
+      entry.category,
+      entry.email_author
+    ]);
+    result = data.rowCount;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  } finally {
+    client.release();
+  }
+  return result;
 };
 
-const deleteEntryByTitle = async (title) => {
-  await pool.query(db_queries_entries.deleteEntryByTitle, [title]);
+const updateEntry = async (entry) => {
+  let client, result;
+  try {
+    client = await pool.connect();
+    const data = await client.query(queries.updateEntry, [
+      entry.title,
+      entry.content,
+      entry.date,
+      entry.category,
+      entry.email_author,
+      entry.old_title
+    ]);
+    result = data.rowCount;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  } finally {
+    client.release();
+  }
+  return result;
 };
 
-module.exports = {
+const deleteEntry = async (entry) => {
+  let client, result;
+  try {
+    client = await pool.connect();
+    const data = await client.query(queries.deleteEntry, [entry.title]);
+    result = data.rowCount;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  } finally {
+    client.release();
+  }
+  return result;
+};
+
+const entries = {
   getAllEntries,
-  updateEntryByTitle,
-  deleteEntryByTitle
+  insertEntry,
+  updateEntry,
+  deleteEntry
 };
+
+module.exports = entries;
